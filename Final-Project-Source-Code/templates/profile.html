@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_2.css') }}">
+</head>
+<body>
+    <div class="layout">
+        <!-- Navigation bar (fixed divider on the left) -->
+        <div class="divider">
+            <form action="{{ url_for('profile') }}" method="get">
+                <button type="submit">Home</button>
+            </form>
+            <form action="{{ url_for('record') }}" method="get">
+                <button type="submit">Attend Patient</button>
+            </form>
+            <form action="{{ url_for('pdf_table') }}" method="get">
+                <button type="submit">View Reports</button>
+            </form>
+            <form action="{{ url_for('logout') }}" method="get">
+                <button type="submit">Logout</button>
+            </form>
+        </div>
+
+        <!-- Header with logo -->
+        <div class="header">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo">
+        </div>
+
+        <!-- Profile content -->
+        <div class="content">
+            <main>
+                <h1>Profile Page</h1>
+                <p><strong>Username:</strong> {{ username }}</p>
+                <p><strong>Email:</strong> {{ email }}</p>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

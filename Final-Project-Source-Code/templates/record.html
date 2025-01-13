@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_2.css') }}">
+    <title>Audio Recorder</title>
+    <style>
+        /* body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+            background-color: #f9f9f9;
+        } */
+        .button1 {
+            padding: 15px 30px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        #start {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #start:hover {
+            background-color: #45a049;
+        }
+        #stop {
+            background-color: #f44336;
+            color: white;
+        }
+        #stop:hover {
+            background-color: #e03127;
+        }
+        #message {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #555;
+        }
+        #report {
+            margin-top: 30px;
+            font-size: 18px;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <!-- Navigation bar (fixed divider on the left) -->
+        <div class="divider">
+            <form action="{{ url_for('profile') }}" method="get">
+                <button type="submit">Home</button>
+            </form>
+            <form action="{{ url_for('record') }}" method="get">
+                <button type="submit">Attend Patient</button>
+            </form>
+            <form action="{{ url_for('pdf_table') }}" method="get">
+                <button type="submit">View Reports</button>
+            </form>
+            <form action="{{ url_for('logout') }}" method="get">
+                <button type="submit">Logout</button>
+            </form>
+            </form>
+        </div>
+
+        <!-- Header with logo -->
+        <div class="header">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo">
+        </div>
+
+        <!-- Profile content -->
+        <div class="contentu">
+            <h1>DOCTRAI</h1>
+            <button class="button1" id="start" onclick="startRecording()">Start Recording</button>
+            <button class="button1" id="stop" onclick="stopRecording()" disabled>Stop Recording</button>
+            <p id="message">Press "Start Recording" to begin.</p>
+            <div id="report"></div>
+
+            <script>
+                let mediaRecorder;
+                let audioChunks = [];
+                const message = document.getElementById("message");
+                const stopButton = document.getElementById("stop");
+                const startButton = document.getElementById("start");
+                const reportDiv = document.getElementById("report");
+
+                async function startRecording() {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        mediaRecorder = new MediaRecorder(stream);
+
+                        mediaRecorder.ondataavailable = event => {
+                            audioChunks.push(event.data);
+                        };
+
+                        mediaRecorder.onstop = async () => {
+                            const blob = new Blob(audioChunks, { type: 'audio/wav' });
+                            const formData = new FormData();
+                            formData.append('audio', blob, 'recording.wav');
+
+                            message.innerText = "Uploading audio...";
+                            const response = await fetch('/upload', {
+                                method: 'POST',
+                                body: formData,
+                            });
+
+                            if (response.ok) {
+                                const result = await response.blob();
+                                const pdfUrl = URL.createObjectURL(result);
+
+                                // Provide download link
+                                reportDiv.innerHTML = `<p>Here is your report:</p><a href="${pdfUrl}" download="patient_report.pdf">Download your report</a>`;
+                            } else {
+                                const error = await response.json();
+                                message.innerText = `Error: ${error.error}`;
+                            }
+                        };
+
+                        mediaRecorder.start();
+                        message.innerText = "Recording... Press 'Stop Recording' to finish.";
+                        startButton.disabled = true;
+                        stopButton.disabled = false;
+                    } catch (err) {
+                        message.innerText = `Error: ${err.message}`;
+                    }
+                }
+
+                function stopRecording() {
+                    mediaRecorder.stop();
+                    startButton.disabled = false;
+                    stopButton.disabled = true;
+                    message.innerText = "Stopping recording...";
+                }
+            </script>   
+        </div>
+        
+    </div>
+</body>
+</html>
